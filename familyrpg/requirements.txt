@@ -1,0 +1,11 @@
+Django==1.6
+South==0.8.4
+argparse==1.2.1
+django-model-utils==1.5.0
+django-tastypie==0.10.0
+lxml==3.2.4
+psycopg2==2.5.1
+python-dateutil==2.2
+python-mimeparse==0.1.4
+six==1.4.1
+wsgiref==0.1.2

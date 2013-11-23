@@ -18,7 +18,9 @@ class Family(models.Model):
         return [ {
                     'id': c.pk ,
                     'text': c.text ,
-                    'resource_uri': reverse('api_dispatch_list', kwargs={'resource_name': 'chore', 'api_name': 'v1'}) + str(c.pk) + "/"
+                    'resource_uri': reverse('api_dispatch_list', kwargs={'resource_name': 'chore', 'api_name': 'v1'}) + str(c.pk) + "/",
+                    'xp_reward': c.xp_reward,
+                    'deadline': c.deadline,
                 } \
                 for c in Chore.objects.all() if c.initiator in self.members.all() \
                         and c.state == ChoreStates.INITIALIZED]
@@ -35,19 +37,17 @@ class FamilyMember(User):
     xp = models.IntegerField(default=0)
 
     def complete_chore(self, chore):
+
         if datetime.datetime.now() > chore.deadline:
             raise ChoreOverdue
+        if self.pk not in chore.allowed_members:
+            raise NotAuthorizedMember
+
         self.xp += chore.xp_reward
         chore.achiever = self
         chore.state = ChoreStates.COMPLETED
         chore.save();
 
-    #def member_rewards(self):
-    #    return self.rewards.all()
-
-    def available_chores(self):
-        # FIX THIS
-        return Chore.objects.all()
 
     class Meta:
         verbose_name_plural = 'Family members'
@@ -96,6 +96,10 @@ class Chore(TimeStampedModel):
     allowed_members = models.ManyToManyField(FamilyMember, related_name="available_chores")
     achiever = models.ForeignKey(FamilyMember, related_name="achieved_chores", null=True, blank=True)
 
+    def resolve(self):
+        self.state = ChoreStates.COMPLETED
+        return {'state': 'completed'}
+
     def __unicode__(self):
         return self.text[:100] + " by " + unicode(self.initiator)
 
@@ -109,9 +113,9 @@ class ChoreVote(TimeStampedModel):
 
 
 class RewardTypes:
-    WATCH_TV = 1
-    PLAY_GAMES = 2
-    PLAY_FOOTBALL = 3
+    WATCH_TV = 0
+    PLAY_GAMES = 1
+    PLAY_FOOTBALL = 2
 
     ALL = (
         (WATCH_TV, 'Watch Tv'),
@@ -124,4 +128,26 @@ class Reward(TimeStampedModel):
     member = models.ForeignKey(FamilyMember, related_name='rewards')
     duration_seconds = models.IntegerField('Duration')
     reward_type = models.IntegerField(choices=RewardTypes.ALL, default=RewardTypes.WATCH_TV)
+    consumed = models.BooleanField(default=False)
+    xp_cost = models.IntegerField(default=100)
+
+    @property
+    def name(self):
+        print 'reward_type', self.reward_type
+        print 'RewardTypes.ALL', RewardTypes.ALL
+        try:
+            return RewardTypes.ALL[self.reward_type][1]
+        except:
+            return 'Fun Activity'
+
+    def consume(self):
+        if self.consumed:
+            return {'error': 'reward already consumed'}
+        if self.member.xp < self.xp_cost:
+            return {'error': 'not enough XP!'}
+        self.consumed = True
+        self.save()
+        self.member.xp -= self.xp_cost
+        self.member.save()
+        return {'state': 'consumed'}
 
