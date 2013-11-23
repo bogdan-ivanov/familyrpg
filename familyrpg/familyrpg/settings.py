@@ -28,6 +28,7 @@ INSTALLED_APPS = (
     'django.contrib.staticfiles',
     'south',
     'familyquest',
+    'tastypie',
 )
 
 MIDDLEWARE_CLASSES = (
