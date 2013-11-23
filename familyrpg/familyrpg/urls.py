@@ -1,5 +1,6 @@
 from django.conf.urls import patterns, include, url
-from familyquest.api import FamilyMemberResource, BadgeResource, ChoreResource, FamilyResource
+from familyquest.api import FamilyMemberResource, BadgeResource, ChoreResource, \
+		FamilyResource, ChoreVoteResource, RewardResource
 from tastypie.api import Api
 
 from django.contrib import admin
@@ -10,6 +11,8 @@ v1_api.register(FamilyMemberResource())
 v1_api.register(BadgeResource())
 v1_api.register(ChoreResource())
 v1_api.register(FamilyResource())
+v1_api.register(ChoreVoteResource())
+v1_api.register(RewardResource())
 
 
 urlpatterns = patterns('',
