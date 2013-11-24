@@ -86,6 +86,7 @@ STATICFILES_DIRS = (
     os.path.join(PROJECT_PATH, "familyrpg", "static"),
 )
 
-
-
-UPLOAD_DIR = os.path.join(BASE_DIR, "static", "uploads"),
+TEMPLATE_DIRS = (
+    os.path.join(PROJECT_PATH, "familyrpg", "templates"),
+)
+UPLOAD_DIR = os.path.join(PROJECT_PATH, "familyrpg", "static"),

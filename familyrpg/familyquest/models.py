@@ -21,9 +21,10 @@ class Family(models.Model):
                     'resource_uri': reverse('api_dispatch_list', kwargs={'resource_name': 'chore', 'api_name': 'v1'}) + str(c.pk) + "/",
                     'xp_reward': c.xp_reward,
                     'deadline': c.deadline,
+                    'voting': c.state == ChoreStates.VOTING,
                 } \
                 for c in Chore.objects.all() if c.initiator in self.members.all() \
-                        and c.state == ChoreStates.INITIALIZED]
+                        and c.state in [ChoreStates.INITIALIZED, ChoreStates.VOTING]]
 
     def __unicode__(self):
         return self.name
@@ -96,9 +97,22 @@ class Chore(TimeStampedModel):
     allowed_members = models.ManyToManyField(FamilyMember, related_name="available_chores")
     achiever = models.ForeignKey(FamilyMember, related_name="achieved_chores", null=True, blank=True)
 
-    def resolve(self):
+    def approve(self):
+        if self.state != ChoreStates.VOTING:
+            return {'error': 'Chore not in voting stage'}
+        if self.achiever:
+            self.achiever.xp += self.xp_reward
+            self.achiever.save()
         self.state = ChoreStates.COMPLETED
+        self.save()
+
         return {'state': 'completed'}
+
+    def resolve(self, user):
+        self.achiever = user
+        self.state = ChoreStates.VOTING
+        self.save()
+        return {'state': 'voting'}
 
     def __unicode__(self):
         return self.text[:100] + " by " + unicode(self.initiator)
@@ -118,7 +132,7 @@ class RewardTypes:
     PLAY_FOOTBALL = 2
 
     ALL = (
-        (WATCH_TV, 'Watch Tv'),
+        (WATCH_TV, 'Watch TV'),
         (PLAY_GAMES, 'Play Games'),
         (PLAY_FOOTBALL, 'Play Football')
     )
@@ -131,10 +145,10 @@ class Reward(TimeStampedModel):
     consumed = models.BooleanField(default=False)
     xp_cost = models.IntegerField(default=100)
 
+
+
     @property
     def name(self):
-        print 'reward_type', self.reward_type
-        print 'RewardTypes.ALL', RewardTypes.ALL
         try:
             return RewardTypes.ALL[self.reward_type][1]
         except:

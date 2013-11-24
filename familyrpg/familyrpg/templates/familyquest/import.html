@@ -1,0 +1,29 @@
+<html>
+<body>
+
+
+<form method="POST" class="form-horizontal" enctype="multipart/form-data">
+    {% csrf_token %}
+    <legend>Add Image</legend>
+    <div class="bluebordered" style="height: 260px;">
+        {{ form.non_field_errors }}
+        <div class="control-group">
+            {{ form.image.errors }}
+            <label class="control-label" for="{{ upload_pol_form.policy_file.auto_id }}">
+                {{ form.image.label }}
+            </label>
+            <div class="controls">
+                {{ form.image }}
+            </div>
+        </div>
+        <div class="control-group">
+            <div class="controls">
+                <input type="submit" class="btn btn-primary" name="image_upload" id="policy_upload" value="Upload"/>
+            </div>
+        </div>
+    </div>
+</form>
+
+
+</body>
+</html>
