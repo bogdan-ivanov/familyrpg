@@ -100,6 +100,8 @@ class ChoreVoteResource(ModelResource):
 
 class RewardResource(ModelResource):
     name = fields.CharField(attribute='name', readonly=True, blank=True, null=True)
+    member = fields.ForeignKey(FamilyMemberResource, 'member')
+
     class Meta:
         queryset = Reward.objects.all()
         resource_name = 'reward'
